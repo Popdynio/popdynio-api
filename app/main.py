@@ -25,6 +25,11 @@ class ForecastRequest(BaseModel):
     transitions: List[TransitionRequest]
 
 
+@app.get('/')
+def hello():
+    return {'msg': 'Hello from popdynio-api'}
+
+
 @app.post('/forecast')
 def forecast(request: ForecastRequest):
     model = Model(request.ids)
@@ -43,7 +48,7 @@ def forecast(request: ForecastRequest):
     print(forecast_response)
 
     return {
-        "time": time.tolist(),
-        "forecast": forecast_response,
-        "model_str": str(model)
+        'time': time.tolist(),
+        'forecast': forecast_response,
+        'model_str': str(model)
     }
