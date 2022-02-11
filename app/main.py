@@ -21,7 +21,7 @@ class TransitionRequest(BaseModel):
 class ForecastRequest(BaseModel):
     ids: List[str]
     forecast_time: int
-    initial_population: dict
+    initial_population: List[int]
     transitions: List[TransitionRequest]
 
 
@@ -38,9 +38,8 @@ def forecast(request: ForecastRequest):
         model[transition.source, transition.dest] = Transition(
             transition.alpha, transition.beta, *(transition.factors), N=transition.includes_n)
 
-    initial_pop = list(request.initial_population.values())
     time, forecast = model.solve(
-        t=request.forecast_time, initial_pop=initial_pop)
+        t=request.forecast_time, initial_pop=request.initial_population)
 
     forecast_response = {
         group: group_forecast.tolist() for (group, group_forecast) in zip(request.ids, forecast)
