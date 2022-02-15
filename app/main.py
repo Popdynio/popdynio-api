@@ -1,6 +1,7 @@
 from typing import List
 from fastapi import FastAPI
 from pydantic import BaseModel
+from enum import Enum
 from fastapi.middleware.cors import CORSMiddleware
 from popdyn import (
     Model,
@@ -17,6 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class SolverMethod(Enum):
+    ode = 'ode'
+    stochastic = 'stochastic'
 
 class TransitionRequest(BaseModel):
     source: str
@@ -32,6 +36,7 @@ class ForecastRequest(BaseModel):
     forecast_time: int
     initial_population: List[int]
     transitions: List[TransitionRequest]
+    method: SolverMethod
 
 
 @app.get('/')
@@ -48,7 +53,7 @@ def forecast(request: ForecastRequest):
             transition.alpha, transition.beta, *(transition.factors), N=transition.includes_n)
 
     time, forecast = model.solve(
-        t=request.forecast_time, initial_pop=request.initial_population)
+        t=request.forecast_time, initial_pop=request.initial_population, solver=request.method)
 
     forecast_response = {
         group: group_forecast.tolist() for (group, group_forecast) in zip(request.ids, forecast)
