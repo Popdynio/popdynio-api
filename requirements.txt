@@ -1,4 +1,4 @@
 fastapi==0.73.0
-popdyn==0.2.1
+popdyn==0.5.0
 pydantic==1.9.0
 uvicorn==0.17.4
