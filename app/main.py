@@ -75,10 +75,35 @@ def forecast(request: ForecastRequest):
         for group in request.ids:
             forecast[group] = cut_every(results[group].tolist(), request.cut_every, lambda x: format(x, '.2f'))
 
-        return {
+        response = {
             'time': time,
             'forecast': forecast,
-            'model_str': str(model)
+            'model_str': str(model),
         }
+
+        if method == 'ODE':
+            diff_response = { i: {} for i in request.ids }
+            in_out_transitions_groups = [model.get_in_out_trans(i) for i in request.ids]
+            for (in_out_transitions, group) in zip(in_out_transitions_groups, request.ids):
+                ins, outs = in_out_transitions
+                diff_response[group]['in'] = [
+                    {
+                        'includes_n': in_transition.N,
+                        'alpha': in_transition.rate,
+                        'factors': in_transition.vars
+                    }
+                    for in_transition in ins
+                ]
+                diff_response[group]['out'] = [
+                    {
+                        'includes_n': out_transition.N,
+                        'alpha': out_transition.rate,
+                        'factors': out_transition.vars
+                    }
+                    for out_transition in outs
+                ]
+            response['diff_response'] = diff_response
+
+        return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
