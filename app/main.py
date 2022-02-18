@@ -1,6 +1,6 @@
 from typing import List, Optional
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
@@ -8,6 +8,7 @@ from popdyn import (
     Model,
     Transition
 )
+from fastapi.openapi.utils import get_openapi
 
 origins = ["*"]
 app = FastAPI()
@@ -29,17 +30,17 @@ class SolverMethod(Enum):
 
 
 class TransitionRequest(BaseModel):
-    source: str
-    dest: str
-    alpha: float
-    factors: List[str]
-    includes_n: bool
+    source: str = Field(..., example='S')
+    dest: str = Field(..., example='I')
+    alpha: float = Field(..., example=0.7)
+    factors: List[str] = Field(..., example=['S', 'I'])
+    includes_n: bool = Field(..., example=True)
 
 
 class ForecastRequest(BaseModel):
-    ids: List[str]
-    forecast_time: int
-    initial_population: List[int]
+    ids: List[str] = Field(..., example=['S', 'I', 'R'])
+    forecast_time: int = Field(..., example=100)
+    initial_population: List[int] = Field(..., example=[100, 1, 0])
     transitions: List[TransitionRequest]
     method: SolverMethod
     cut_every: Optional[int] = 1
@@ -107,3 +108,21 @@ def forecast(request: ForecastRequest):
         return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Popdynio API",
+        version="1.0.0",
+        description="This is the API service for the Popdynio package",
+        routes=app.routes,
+    )
+    openapi_schema["info"]["x-logo"] = {
+        "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
