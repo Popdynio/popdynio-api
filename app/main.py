@@ -10,14 +10,14 @@ from popdyn import (
 )
 from fastapi.openapi.utils import get_openapi
 
-origins = ["*"]
+origins = ['*']
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 def cut_every(list, every, formatter):
